@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/enam/Projects/internet-waiting-room/fe/app/loading.tsx"],"sourcesContent":["export default function Loading() {\n  return (\n    <div className=\"flex-1 flex flex-col items-center justify-center min-h-[60vh] select-none text-center\">\n      <div className=\"relative w-12 h-12 flex items-center justify-center mb-6\">\n        <div className=\"absolute inset-0 rounded-full border border-charcoal-400/20 animate-ping\" />\n        <div className=\"w-8 h-8 rounded-full border border-charcoal-300 animate-pulse\" />\n      </div>\n      <p className=\"font-mono text-[9px] uppercase tracking-widest text-charcoal-400 font-semibold mb-1\">\n        Aligning Chamber\n      </p>\n      <h3 className=\"font-serif text-lg italic text-charcoal-900\">\n        Adjusting focus...\n      </h3>\n    </div>\n  );\n}\n"],"names":["Loading","className"],"mappings":";;;;;;AAAe,SAASA;IACtB,qBACE,8OAAC;QAAIC,WAAU;;0BACb,8OAAC;gBAAIA,WAAU;;kCACb,8OAAC;wBAAIA,WAAU;;;;;;kCACf,8OAAC;wBAAIA,WAAU;;;;;;;;;;;;0BAEjB,8OAAC;gBAAEA,WAAU;0BAAsF;;;;;;0BAGnG,8OAAC;gBAAGA,WAAU;0BAA8C;;;;;;;;;;;;AAKlE"}}]
-}
