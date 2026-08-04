@@ -44,6 +44,7 @@ export default function CompletePage() {
   const [mounted, setMounted] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [instagramToast, setInstagramToast] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -100,8 +101,19 @@ export default function CompletePage() {
     } catch {}
   };
 
+  const handleInstagramShare = async () => {
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+      setInstagramToast(true);
+      setTimeout(() => setInstagramToast(false), 3000);
+      window.open("https://www.instagram.com", "_blank", "noopener,noreferrer");
+    } catch {}
+  };
+
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`;
+  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
 
   return (
     <div className="flex-1 flex flex-col items-center py-10 select-none">
@@ -255,7 +267,7 @@ export default function CompletePage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="fixed inset-x-4 bottom-8 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-[#FBF9F6] border border-cream-300 rounded-xl shadow-2xl z-50 p-6"
+              className="fixed inset-x-4 bottom-8 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md bg-[#FBF9F6] border border-cream-300 rounded-xl shadow-2xl z-50 p-6"
             >
               <div className="text-center mb-6">
                 <span className="font-mono text-[9px] uppercase tracking-widest text-[#A88145] font-semibold">
@@ -269,18 +281,41 @@ export default function CompletePage() {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3">
-                {/* Twitter / X */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* X / Twitter */}
                 <a
                   href={twitterUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg border border-cream-300 hover:border-charcoal-400 bg-cream-50/50 hover:bg-cream-100 transition-all text-charcoal-900 cursor-pointer no-underline"
+                  className="flex flex-col items-center justify-center p-4 rounded-xl border border-cream-200 hover:border-charcoal-900 bg-white hover:bg-cream-50/50 transition-all text-charcoal-900 cursor-pointer no-underline group shadow-2xs hover:shadow-xs"
                 >
-                  <X className="w-4 h-4 text-[#1DA1F2]" />
-                  <span className="font-serif text-sm">
-                    Share on X / Twitter
-                  </span>
+                  <div className="w-10 h-10 rounded-full bg-charcoal-900 flex items-center justify-center text-white mb-2 shadow-xs group-hover:scale-110 transition-transform duration-300">
+                    <X className="w-4 h-4" />
+                  </div>
+                  <span className="font-serif text-[11px] font-medium">X / Twitter</span>
+                </a>
+
+                {/* Facebook */}
+                <a
+                  href={facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center justify-center p-4 rounded-xl border border-cream-200 hover:border-[#1877F2] bg-white hover:bg-[#1877F2]/5 transition-all text-charcoal-900 cursor-pointer no-underline group shadow-2xs hover:shadow-xs"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center text-white mb-2 shadow-xs group-hover:scale-110 transition-transform duration-300">
+                    <svg
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                    </svg>
+                  </div>
+                  <span className="font-serif text-[11px] font-medium">Facebook</span>
                 </a>
 
                 {/* WhatsApp */}
@@ -288,31 +323,81 @@ export default function CompletePage() {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg border border-cream-300 hover:border-charcoal-400 bg-cream-50/50 hover:bg-cream-100 transition-all text-charcoal-900 cursor-pointer no-underline"
+                  className="flex flex-col items-center justify-center p-4 rounded-xl border border-cream-200 hover:border-[#25D366] bg-white hover:bg-[#25D366]/5 transition-all text-charcoal-900 cursor-pointer no-underline group shadow-2xs hover:shadow-xs"
                 >
-                  <MessageCircle className="w-4 h-4 text-[#25D366]" />
-                  <span className="font-serif text-sm">Share on WhatsApp</span>
+                  <div className="w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center text-white mb-2 shadow-xs group-hover:scale-110 transition-transform duration-300">
+                    <MessageCircle className="w-5 h-5" />
+                  </div>
+                  <span className="font-serif text-[11px] font-medium">WhatsApp</span>
                 </a>
+
+                {/* LinkedIn */}
+                <a
+                  href={linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center justify-center p-4 rounded-xl border border-cream-200 hover:border-[#0A66C2] bg-white hover:bg-[#0A66C2]/5 transition-all text-charcoal-900 cursor-pointer no-underline group shadow-2xs hover:shadow-xs"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#0A66C2] flex items-center justify-center text-white mb-2 shadow-xs group-hover:scale-110 transition-transform duration-300">
+                    <svg
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                      <rect x="2" y="9" width="4" height="12" />
+                      <circle cx="4" cy="4" r="2" />
+                    </svg>
+                  </div>
+                  <span className="font-serif text-[11px] font-medium">LinkedIn</span>
+                </a>
+
+                {/* Instagram */}
+                <button
+                  onClick={handleInstagramShare}
+                  className="flex flex-col items-center justify-center p-4 rounded-xl border border-cream-200 hover:border-[#E1306C] bg-white hover:bg-[#E1306C]/5 transition-all text-charcoal-900 cursor-pointer group shadow-2xs hover:shadow-xs"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FFDC80] via-[#E1306C] to-[#C13584] flex items-center justify-center text-white mb-2 shadow-xs group-hover:scale-110 transition-transform duration-300">
+                    <svg
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                    </svg>
+                  </div>
+                  <span className="font-serif text-[11px] font-medium">
+                    {instagramToast ? "Copied! Opening..." : "Instagram"}
+                  </span>
+                </button>
 
                 {/* Copy Link */}
                 <button
                   onClick={handleCopyLink}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg border border-cream-300 hover:border-charcoal-400 bg-cream-50/50 hover:bg-cream-100 transition-all text-charcoal-900 cursor-pointer w-full text-left"
+                  className="flex flex-col items-center justify-center p-4 rounded-xl border border-cream-200 hover:border-gold-500 bg-white hover:bg-gold-500/5 transition-all text-charcoal-900 cursor-pointer group shadow-2xs hover:shadow-xs"
                 >
-                  {copied ? (
-                    <Check className="w-4 h-4 text-sage-500" />
-                  ) : (
-                    <Link2 className="w-4 h-4 text-charcoal-400" />
-                  )}
-                  <span className="font-serif text-sm">
-                    {copied ? "Copied to clipboard!" : "Copy link & text"}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white mb-2 shadow-xs group-hover:scale-110 transition-transform duration-300 ${copied ? "bg-sage-500" : "bg-gold-500"}`}>
+                    {copied ? <Check className="w-5 h-5" /> : <Link2 className="w-5 h-5" />}
+                  </div>
+                  <span className="font-serif text-[11px] font-medium">
+                    {copied ? "Copied!" : "Copy Link"}
                   </span>
                 </button>
               </div>
 
               <button
                 onClick={() => setShowShareModal(false)}
-                className="mt-4 w-full text-center font-mono text-[10px] uppercase tracking-widest text-charcoal-400 hover:text-charcoal-900 transition-colors cursor-pointer"
+                className="mt-6 w-full text-center font-mono text-[10px] uppercase tracking-widest text-charcoal-400 hover:text-charcoal-900 transition-colors cursor-pointer"
               >
                 Close
               </button>
