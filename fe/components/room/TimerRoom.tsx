@@ -12,16 +12,24 @@ interface TimerRoomProps {
     buttonText?: string;
   };
   onSubmit: (value: number) => void;
+  isSubmitted?: boolean;
+  selectedResponse?: number;
 }
 
-export default function TimerRoom({ room, onSubmit }: TimerRoomProps) {
+export default function TimerRoom({ 
+  room, 
+  onSubmit, 
+  isSubmitted = false, 
+  selectedResponse 
+}: TimerRoomProps) {
   const targetSeconds = room.target || 8;
-  const [gameState, setGameState] = useState<"idle" | "running" | "stopped">("idle");
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const [gameState, setGameState] = useState<"idle" | "running" | "stopped">(isSubmitted ? "stopped" : "idle");
+  const [elapsedTime, setElapsedTime] = useState(selectedResponse || 0);
   const startTimeRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
   const handleStart = () => {
+    if (isSubmitted) return;
     setGameState("running");
     setElapsedTime(0);
     startTimeRef.current = performance.now();
@@ -36,15 +44,23 @@ export default function TimerRoom({ room, onSubmit }: TimerRoomProps) {
   };
 
   const handleStop = () => {
+    if (isSubmitted) return;
     if (animationFrameRef.current !== null) {
       cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
-    setGameState("stopped");
+    
+    // Capture the exact elapsed milliseconds BEFORE nulling startTimeRef
+    const capturedStart = startTimeRef.current;
     startTimeRef.current = null;
-  };
+    setGameState("stopped");
 
-  const handleContinue = () => {
-    onSubmit(Number(elapsedTime.toFixed(2)));
+    const finalTime = capturedStart != null
+      ? Number(((performance.now() - capturedStart) / 1000).toFixed(2))
+      : 0;
+
+    setElapsedTime(finalTime);
+    onSubmit(finalTime);
   };
 
   useEffect(() => {
@@ -139,7 +155,7 @@ export default function TimerRoom({ room, onSubmit }: TimerRoomProps) {
         {gameState === "idle" && (
           <button
             onClick={handleStart}
-            className="px-8 py-3 rounded-full border border-charcoal-900 bg-charcoal-900 hover:bg-charcoal-600 text-cream-50 font-serif text-sm tracking-wide transition-all duration-300 transform active:scale-98 cursor-pointer"
+            className="px-8 py-3 rounded-full border border-charcoal-900 bg-charcoal-900 hover:bg-charcoal-600 text-[#FDFDFB] font-serif text-sm tracking-wide transition-all duration-300 transform active:scale-98 cursor-pointer"
           >
             Start
           </button>
@@ -148,18 +164,9 @@ export default function TimerRoom({ room, onSubmit }: TimerRoomProps) {
         {gameState === "running" && (
           <button
             onClick={handleStop}
-            className="px-8 py-3 rounded-full border border-red-500 bg-red-500 hover:bg-red-600 text-cream-50 font-serif text-sm tracking-wide transition-all duration-300 transform active:scale-98 cursor-pointer shadow-md"
+            className="px-8 py-3 rounded-full border border-red-500 bg-red-500 hover:bg-red-600 text-[#FDFDFB] font-serif text-sm tracking-wide transition-all duration-300 transform active:scale-98 cursor-pointer shadow-md"
           >
             {room.buttonText || "Stop"}
-          </button>
-        )}
-
-        {gameState === "stopped" && (
-          <button
-            onClick={handleContinue}
-            className="px-8 py-3 rounded-full border border-charcoal-900 bg-charcoal-900 hover:bg-charcoal-600 text-cream-50 font-serif text-sm tracking-wide transition-all duration-300 transform active:scale-98 cursor-pointer"
-          >
-            Continue
           </button>
         )}
       </div>

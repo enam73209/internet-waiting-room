@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React from "react";
 
 interface PreferenceRoomProps {
   room: {
@@ -12,33 +11,46 @@ interface PreferenceRoomProps {
     buttonText?: string;
   };
   onSubmit: (value: string) => void;
+  isSubmitted?: boolean;
+  selectedResponse?: string;
 }
 
-export default function PreferenceRoom({ room, onSubmit }: PreferenceRoomProps) {
-  const [selected, setSelected] = useState<string | null>(null);
+export default function PreferenceRoom({ 
+  room, 
+  onSubmit, 
+  isSubmitted = false, 
+  selectedResponse 
+}: PreferenceRoomProps) {
+  const selected = selectedResponse || null;
 
-  const handleSubmit = () => {
-    if (selected) {
-      onSubmit(selected);
-    }
+  const handleSelect = (opt: string) => {
+    if (isSubmitted) return;
+    onSubmit(opt);
   };
 
   return (
-    <div className="w-full flex flex-col items-center justify-center select-none py-6">
-      <h3 className="font-serif text-lg text-charcoal-900 text-center mb-10 max-w-md leading-relaxed">
+    <div className="w-full flex flex-col items-center justify-center select-none py-4">
+      <h3 className="font-serif text-lg text-charcoal-900 text-center mb-8 max-w-md leading-relaxed">
         {room.question || room.subtitle || "Select your preference."}
       </h3>
 
       {/* Options Cards */}
-      <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl mb-12">
+      <div className="flex flex-col sm:flex-row gap-6 w-full max-w-2xl">
         {room.options.map((opt) => {
           const isSelected = selected === opt;
           return (
             <button
               key={opt}
-              onClick={() => setSelected(opt)}
-              className={`flex-1 text-center p-6 md:p-8 rounded-lg border bg-cream-50/50 hover:bg-cream-50 transition-all duration-300 flex flex-col items-center justify-center gap-3 focus:outline-hidden focus:ring-1 focus:ring-charcoal-400 group relative cursor-pointer ${
-                isSelected ? "border-charcoal-900 shadow-md" : "border-cream-300 shadow-xs"
+              disabled={isSubmitted}
+              onClick={() => handleSelect(opt)}
+              className={`flex-1 text-center p-6 md:p-8 rounded-lg border bg-cream-50/50 hover:bg-cream-50 transition-all duration-300 flex flex-col items-center justify-center gap-3 focus:outline-hidden focus:ring-1 focus:ring-charcoal-400 group relative ${
+                isSubmitted ? "cursor-default" : "cursor-pointer"
+              } ${
+                isSelected 
+                  ? "border-charcoal-900 shadow-md opacity-100" 
+                  : isSubmitted 
+                    ? "border-cream-200 opacity-30" 
+                    : "border-cream-300 shadow-xs"
               }`}
             >
               {/* Checkmark overlay circle */}
@@ -56,20 +68,6 @@ export default function PreferenceRoom({ room, onSubmit }: PreferenceRoomProps) 
             </button>
           );
         })}
-      </div>
-
-      {/* Confirm Button */}
-      <div className="h-14">
-        {selected && (
-          <motion.button
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={handleSubmit}
-            className="px-8 py-3 rounded-full border border-charcoal-900 hover:bg-charcoal-900 hover:text-cream-50 font-serif text-sm tracking-wide transition-all duration-300 transform active:scale-98 cursor-pointer"
-          >
-            {room.buttonText || "Confirm Preference"}
-          </motion.button>
-        )}
       </div>
     </div>
   );

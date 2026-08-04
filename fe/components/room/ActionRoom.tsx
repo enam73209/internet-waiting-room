@@ -19,14 +19,21 @@ interface ActionRoomProps {
     };
   };
   onSubmit: (value: string) => void;
+  isSubmitted?: boolean;
+  selectedResponse?: string;
 }
 
-export default function ActionRoom({ room, onSubmit }: ActionRoomProps) {
+export default function ActionRoom({ 
+  room, 
+  onSubmit, 
+  isSubmitted = false, 
+  selectedResponse 
+}: ActionRoomProps) {
   const { playChime } = useSound();
-  const [highFived, setHighFived] = useState(false);
+  const [highFived, setHighFived] = useState(isSubmitted || !!selectedResponse);
 
   const handleHighFive = () => {
-    if (highFived) return;
+    if (highFived || isSubmitted) return;
     setHighFived(true);
     playChime();
 
@@ -42,7 +49,7 @@ export default function ActionRoom({ room, onSubmit }: ActionRoomProps) {
         {room.subtitle || "He's been waiting all day."}
       </h3>
       <p className="font-sans text-xs text-charcoal-400 text-center mb-8 max-w-xs leading-relaxed">
-        Tap the penguin to give him a high five.
+        {highFived ? "You gave him a high-five!" : "Tap the penguin to give him a high five."}
       </p>
 
       {/* Interactive Penguin Canvas */}
@@ -59,7 +66,7 @@ export default function ActionRoom({ room, onSubmit }: ActionRoomProps) {
               ? { duration: 1.0, ease: "easeOut" }
               : { duration: 4.0, repeat: Infinity, ease: "easeInOut" }
           }
-          className="w-44 h-48 relative flex items-center justify-center cursor-pointer"
+          className={`w-44 h-48 relative flex items-center justify-center ${highFived || isSubmitted ? "cursor-default" : "cursor-pointer"}`}
         >
           {/* Shadow underneath */}
           <motion.div
@@ -81,7 +88,7 @@ export default function ActionRoom({ room, onSubmit }: ActionRoomProps) {
             viewBox="0 0 100 120"
             className="w-full h-full drop-shadow-md z-10 overflow-visible"
           >
-            {/* Left Flipper (Waving or idle) */}
+            {/* Left Flipper */}
             <motion.path
               d="M 22 65 C 10 65, 8 85, 12 90 C 18 95, 25 75, 25 70"
               fill="#2D3436"
@@ -98,7 +105,7 @@ export default function ActionRoom({ room, onSubmit }: ActionRoomProps) {
               className="origin-[25px_65px]"
             />
 
-            {/* Right Flipper (Raised for high-five) */}
+            {/* Right Flipper */}
             <motion.path
               d="M 78 65 C 92 65, 96 35, 94 30 C 88 25, 75 55, 75 60"
               fill="#2D3436"
@@ -136,7 +143,7 @@ export default function ActionRoom({ room, onSubmit }: ActionRoomProps) {
 
           {/* High Five Glow Sparkles */}
           <AnimatePresence>
-            {highFived && (
+            {highFived && !isSubmitted && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: [0, 1, 0], scale: [0.8, 1.4, 1.6] }}
@@ -164,7 +171,7 @@ export default function ActionRoom({ room, onSubmit }: ActionRoomProps) {
         ) : (
           <button
             onClick={handleHighFive}
-            className="px-8 py-3 rounded-full border border-charcoal-900 bg-charcoal-900 hover:bg-charcoal-600 text-cream-50 font-serif text-sm tracking-wide transition-all duration-300 transform active:scale-98 cursor-pointer"
+            className="px-8 py-3 rounded-full border border-charcoal-900 bg-charcoal-900 hover:bg-charcoal-600 text-[#FDFDFB] font-serif text-sm tracking-wide transition-all duration-300 transform active:scale-98 cursor-pointer"
           >
             {room.buttonText || "High Five!"}
           </button>

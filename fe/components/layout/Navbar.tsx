@@ -14,9 +14,6 @@ export default function Navbar() {
         <h1 className="font-serif text-xl tracking-tight text-charcoal-900 group-hover:opacity-80 transition-opacity">
           The Waiting Room
         </h1>
-        <span className="font-mono text-[9px] uppercase tracking-widest opacity-40 group-hover:opacity-60 transition-opacity">
-          A digital museum
-        </span>
       </TransitionLink>
 
       <SoundControl />

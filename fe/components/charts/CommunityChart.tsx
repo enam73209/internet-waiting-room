@@ -170,9 +170,10 @@ export default function CommunityChart({ type, data }: CommunityChartProps) {
     case "preference":
     case "dilemma":
     case "timer": {
+      // Support both rooms.json shape (label/value) and legacy shape (option/percentage)
       const formatted = data.map((d) => ({
-        label: d.option || d.time || "Option",
-        pct: d.percentage,
+        label: d.label || d.option || d.time || "Option",
+        pct: d.value ?? d.percentage ?? 0,
       }));
 
       if (formatted.length < 2) return null;
