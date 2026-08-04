@@ -59,8 +59,8 @@ export default function TodayRedirect() {
 
   const messages = [
     "Connecting today's visitors...",
-    "Gathering today's moments...",
-    `Preparing Room ${roomName}...`
+    `Preparing Room ${roomName}...`,
+    "Opening today's journey..."
   ];
 
   return (

@@ -31,6 +31,7 @@ export default function RoomShell({ room }: RoomShellProps) {
   const [stage, setStage] = useState<"interact" | "reveal">("interact");
   const { submitResponse, completeRoom, setRoomIndex, responses } = useRoomStore();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rightColRef = useRef<HTMLDivElement | null>(null);
 
   // Find index in daily set
   const roomIndex = dailySet.rooms.indexOf(Number(room.id));
@@ -39,6 +40,17 @@ export default function RoomShell({ room }: RoomShellProps) {
   useEffect(() => {
     setStage("interact");
   }, [room.id]);
+
+  // Smooth scroll to reveal on mobile only
+  useEffect(() => {
+    if (stage === "reveal" && typeof window !== "undefined") {
+      if (window.innerWidth < 1024) {
+        setTimeout(() => {
+          rightColRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 150);
+      }
+    }
+  }, [stage]);
 
   const handleResponseSubmit = (value: any) => {
     submitResponse(room.id, value);
@@ -56,7 +68,7 @@ export default function RoomShell({ room }: RoomShellProps) {
     }
   };
 
-  // Canvas floating dust particles (matching landing page, soft ambient room dust)
+  // Canvas floating dust particles
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -114,7 +126,6 @@ export default function RoomShell({ room }: RoomShellProps) {
     };
   }, []);
 
-  // Render correct interaction block with isSubmitted and selectedResponse state
   const renderInteractBlock = () => {
     const isSubmitted = stage === "reveal";
     const selectedResponse = responses[room.id];
@@ -148,7 +159,7 @@ export default function RoomShell({ room }: RoomShellProps) {
   return (
     <div className="w-full flex-1 flex flex-col justify-center items-center py-6 relative">
       
-      {/* Ambient floating dust particles inside room */}
+      {/* Ambient floating dust particles */}
       <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-10 opacity-70" />
 
       {/* Main room layout grid */}
@@ -173,10 +184,35 @@ export default function RoomShell({ room }: RoomShellProps) {
           <div className="w-full bg-[#FFF9F6]/40 border border-cream-200 rounded-lg p-6 md:p-8 shadow-xs backdrop-blur-xs">
             {renderInteractBlock()}
           </div>
+
+          {/* Desktop Reveal Segment (rendered side-by-side underneath the MCQ card) */}
+          {stage === "reveal" && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="hidden lg:flex flex-row gap-8 w-full mt-8 border-t border-cream-200/50 pt-6 items-center"
+            >
+              <div className="flex-1 text-left select-none">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-[#A88145] font-semibold">
+                  Community Snapshot
+                </span>
+                <p className="font-serif text-sm italic text-charcoal-600 leading-relaxed mt-1.5">
+                  &ldquo;{room.result?.story || room.revealNarrative || ""}&rdquo;
+                </p>
+              </div>
+              <div className="w-64 flex justify-center py-2 bg-cream-50/10 rounded-md border border-cream-200/40">
+                <CommunityChart type={room.type} data={room.result?.stats || room.revealStatistics || []} />
+              </div>
+            </motion.div>
+          )}
         </div>
 
-        {/* Right Side: Reveal & Door CTA */}
-        <div className="w-full lg:w-80 flex flex-col items-center justify-center border-t lg:border-t-0 lg:border-l border-cream-200/50 pt-10 lg:pt-0 lg:pl-12 min-h-[380px] z-20">
+        {/* Right Side: Door CTA / Mobile Reveal */}
+        <div 
+          ref={rightColRef}
+          className="w-full lg:w-80 flex flex-col items-center justify-center border-t lg:border-t-0 lg:border-l border-cream-200/50 pt-10 lg:pt-0 lg:pl-12 min-h-[380px] z-20"
+        >
           {stage === "interact" ? (
             /* Locked State */
             <div className="flex flex-col items-center justify-center text-center gap-6">
@@ -191,29 +227,30 @@ export default function RoomShell({ room }: RoomShellProps) {
             </div>
           ) : (
             /* Revealed State */
-            <motion.div 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="flex flex-col items-center w-full gap-6"
-            >
-              {/* Storytelling Narrative */}
-              <div className="text-center max-w-xs select-none">
-                <span className="font-mono text-[9px] uppercase tracking-widest text-[#A88145] font-semibold">
-                  Community Snapshot
-                </span>
-                <p className="font-serif text-sm italic text-charcoal-600 leading-relaxed mt-2">
-                  &ldquo;{room.result?.story || room.revealNarrative || ""}&rdquo;
-                </p>
-              </div>
+            <div className="flex flex-col items-center w-full gap-6">
+              
+              {/* Mobile-only Reveal Segment (hidden on desktop lg) */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="lg:hidden w-full flex flex-col items-center gap-6 mb-2"
+              >
+                <div className="text-center max-w-xs select-none">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-[#A88145] font-semibold">
+                    Community Snapshot
+                  </span>
+                  <p className="font-serif text-sm italic text-charcoal-600 leading-relaxed mt-2">
+                    &ldquo;{room.result?.story || room.revealNarrative || ""}&rdquo;
+                  </p>
+                </div>
+                <div className="w-full max-w-xs flex justify-center py-2 bg-cream-50/10 rounded-md border border-cream-200/40">
+                  <CommunityChart type={room.type} data={room.result?.stats || room.revealStatistics || []} />
+                </div>
+              </motion.div>
 
-              {/* Stats Chart */}
-              <div className="w-full max-w-xs flex justify-center py-2 bg-cream-50/10 rounded-md border border-cream-200/40">
-                <CommunityChart type={room.type} data={room.result?.stats || room.revealStatistics || []} />
-              </div>
-
-              {/* Next Room Door CTA */}
-              <div className="flex flex-col items-center gap-4 mt-2">
+              {/* Door CTA (Stays vertically centered on desktop) */}
+              <div className="flex flex-col items-center gap-4">
                 <InteractiveDoor 
                   id={roomIndex !== -1 ? roomIndex + 2 : 2}
                   isLocked={false}
@@ -225,7 +262,7 @@ export default function RoomShell({ room }: RoomShellProps) {
                   Click the door to proceed
                 </span>
               </div>
-            </motion.div>
+            </div>
           )}
         </div>
 

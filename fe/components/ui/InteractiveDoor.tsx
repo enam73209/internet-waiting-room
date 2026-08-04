@@ -8,6 +8,7 @@ interface InteractiveDoorProps {
   id: number;
   isLocked?: boolean;
   onOpenComplete?: () => void;
+  onIdleEvent?: (event: "flicker" | "wiggle") => void;
   size?: "sm" | "md" | "lg";
   nextLabel?: string;
 }
@@ -16,6 +17,7 @@ export default function InteractiveDoor({
   id,
   isLocked = false,
   onOpenComplete,
+  onIdleEvent,
   size = "md",
   nextLabel,
 }: InteractiveDoorProps) {
@@ -30,60 +32,64 @@ export default function InteractiveDoor({
   // Track mouse coordinates
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2;
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      const x = (e.clientX / window.innerWidth - 0.5) * 2; // -1 to 1
+      const y = (e.clientY / window.innerHeight - 0.5) * 2; // -1 to 1
       setMousePos({ x, y });
     };
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Idle animations
+  // Idle animations (every 12 seconds)
   useEffect(() => {
     const interval = setInterval(() => {
       if (isOpening || isLocked) return;
+
+      // Notify parent of wiggle/flicker event
+      if (onIdleEvent) onIdleEvent("wiggle");
 
       // Handle wiggle
       setHandleWiggle(true);
       setTimeout(() => setHandleWiggle(false), 600);
 
-      // Light flicker
+      // Light flicker under door
       let ticks = 0;
       const flicker = setInterval(() => {
-        setLightFlicker(0.6 + Math.random() * 0.4);
+        setLightFlicker(0.5 + Math.random() * 0.5);
         ticks++;
-        if (ticks > 10) {
+        if (ticks > 12) {
           clearInterval(flicker);
           setLightFlicker(1.0);
         }
       }, 70);
 
       // Faint ambient sound (bird chirp or piano chime or hover creak)
-      if (Math.random() < 0.35 && !isMuted) {
+      if (Math.random() < 0.4 && !isMuted) {
         const rand = Math.random();
-        if (rand < 0.4) {
+        if (rand < 0.45) {
           playDoorHoverCreak();
-        } else if (rand < 0.8) {
+        } else {
           playChime();
         }
       }
-    }, 14000);
+    }, 12000);
 
     return () => clearInterval(interval);
-  }, [isMuted, isOpening, isLocked, playChime, playDoorHoverCreak]);
+  }, [isMuted, isOpening, isLocked, playChime, playDoorHoverCreak, onIdleEvent]);
 
+  // Hover sound plays exactly once per hover
   const handleMouseEnter = () => {
     if (isLocked || isOpening) return;
     setIsHovering(true);
     if (!hasPlayedHoverCreak) {
       playDoorHoverCreak();
       setHasPlayedHoverCreak(true);
-      setTimeout(() => setHasPlayedHoverCreak(false), 5000); // Cooldown
     }
   };
 
   const handleMouseLeave = () => {
     setIsHovering(false);
+    setHasPlayedHoverCreak(false); // Reset trigger so it plays on next enter
   };
 
   const handleClick = () => {
@@ -99,18 +105,20 @@ export default function InteractiveDoor({
     }, 300);
   };
 
-  // Size class sizing maps
+  // Sizing mappings
   const sizeClasses = {
     sm: "w-40 h-[240px] md:w-44 md:h-[270px]",
     md: "w-48 h-[290px] md:w-56 md:h-[340px]",
     lg: "w-64 h-[380px] md:w-72 md:h-[430px]"
   };
 
-  // Convert number to words
   const numberWords: Record<number, string> = {
     1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine"
   };
-  const targetLabel = nextLabel || (id === 1 ? "Open Today's First Door" : `Enter Door ${numberWords[id] || id}`);
+  const targetLabel = nextLabel || (id === 1 ? "Click to Open Today's First Door" : `Enter Door ${numberWords[id] || id}`);
+
+  // Reflected specular highlights on brass handle based on mouse pos
+  const handleSpecularAngle = 135 + mousePos.x * 20 + mousePos.y * 10;
 
   return (
     <div 
@@ -145,40 +153,49 @@ export default function InteractiveDoor({
           </div>
         </div>
 
-        {/* Backlight / Glow when hovering or opening */}
-        <div 
-          className="absolute inset-2 bg-gradient-to-tr from-amber-400/20 via-gold-500/10 to-transparent rounded-md blur-xl transition-all duration-700 z-0"
-          style={{
-            transform: "translateZ(-10px)",
-            opacity: isOpening ? 0.95 : isHovering ? 0.6 : 0.3,
-            scale: isOpening ? 1.4 : isHovering ? 1.15 : 1.0,
-          }}
+        {/* Breathing backlight glow */}
+        <motion.div 
+          animate={
+            isOpening 
+              ? { opacity: 0.95, scale: 1.4 } 
+              : isHovering 
+                ? { opacity: 0.65, scale: 1.15 } 
+                : { opacity: [0.25, 0.42, 0.25], scale: [1.0, 1.05, 1.0] }
+          }
+          transition={
+            isOpening || isHovering 
+              ? { duration: 0.6 } 
+              : { duration: 7, repeat: Infinity, ease: "easeInOut" }
+          }
+          className="absolute inset-2 bg-gradient-to-tr from-amber-400/20 via-gold-500/10 to-transparent rounded-md blur-xl z-0"
+          style={{ transform: "translateZ(-12px)" }}
         />
 
         {/* Warm light leaking underneath the door frame */}
         <div 
-          className="absolute -bottom-1 left-2 right-2 h-[3px] rounded-full z-0 transition-all duration-500"
+          className="absolute -bottom-1.5 left-2 right-2 h-[3.5px] rounded-full z-0 transition-all duration-500"
           style={{
             background: "radial-gradient(ellipse at center, #ffca6b 0%, #a88145 60%, rgba(0,0,0,0) 100%)",
             boxShadow: isLocked 
               ? "none" 
-              : `0 0 ${10 * lightFlicker + (isHovering ? 4 : 0)}px ${3 * lightFlicker + (isHovering ? 1 : 0)}px #e3c485, 
-                 0 0 ${20 * lightFlicker}px ${8 * lightFlicker}px rgba(168, 129, 69, 0.25)`,
+              : `0 0 ${13 * lightFlicker + (isHovering ? 6 : 0)}px ${4 * lightFlicker + (isHovering ? 2 : 0)}px #e3c485, 
+                 0 0 ${25 * lightFlicker}px ${10 * lightFlicker}px rgba(168, 129, 69, 0.3)`,
             opacity: isOpening ? 0 : 1,
           }}
         />
 
-        {/* Door Frame (Fixed border box in 3D) */}
+        {/* Door Frame (Fixed border box in 3D) with physical shadow tracking */}
         <div 
-          className="absolute inset-0 bg-[#EAE3DC] border-[8px] border-[#DFD5CB] rounded-sm shadow-[0_12px_28px_rgba(0,0,0,0.06),inset_0_2px_10px_rgba(255,255,255,0.4)] flex items-center justify-center overflow-hidden z-10"
+          className="absolute inset-0 bg-[#EAE3DC] border-[8px] border-[#DFD5CB] rounded-md flex items-center justify-center overflow-hidden z-10"
           style={{
-            transform: `rotateY(${isOpening || isLocked ? 0 : mousePos.x * 5}deg) rotateX(${isOpening || isLocked ? 0 : -mousePos.y * 5}deg)`,
+            transform: `rotateY(${isOpening || isLocked ? 0 : mousePos.x * 5.2}deg) rotateX(${isOpening || isLocked ? 0 : -mousePos.y * 5.2}deg)`,
             transformStyle: "preserve-3d",
             transition: "transform 0.4s ease-out",
+            boxShadow: `${mousePos.x * -8}px ${16 + mousePos.y * -8}px 32px rgba(26,25,24,${isHovering ? 0.08 : 0.05}), inset 0 2px 10px rgba(255,255,255,0.4)`
           }}
         >
           
-          {/* Internal glowing doorway, revealed when door swings open */}
+          {/* Internal glowing doorway */}
           <div className="absolute inset-0 bg-[#FFF9F6] flex items-center justify-center z-0">
             <motion.div
               initial={{ opacity: 0 }}
@@ -188,62 +205,98 @@ export default function InteractiveDoor({
             />
           </div>
 
-          {/* Door Leaf (The swinging wood piece) */}
+          {/* Door Leaf (White Oak Wood panel) */}
           <div 
-            className="absolute inset-0 bg-[#FBF9F6] border-l-2 border-l-[#EAE3DC] flex flex-col justify-between p-6 select-none z-10 transition-transform duration-1000 shadow-xl"
+            className="absolute inset-0 bg-[#EDE6DD] border-l-2 border-l-[#EAE3DC] flex flex-col justify-between p-6 select-none z-10 transition-transform duration-1000 shadow-xl rounded-sm"
             style={{
               transformOrigin: "left center",
-              transform: isOpening ? "rotateY(-92deg) translateZ(1px)" : "rotateY(0deg)",
+              transform: isOpening ? "rotateY(-92deg) translateZ(1.5px)" : "rotateY(0deg)",
               transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
-              boxShadow: isOpening ? "6px 0 20px rgba(0,0,0,0.15)" : "none",
+              boxShadow: isOpening ? "6px 0 20px rgba(0,0,0,0.12)" : "none",
             }}
           >
-            {/* Simulated wood grain pattern */}
+            {/* Fine white oak wood grain lines (SVG) */}
+            <svg 
+              className="absolute inset-0 w-full h-full opacity-[0.05] pointer-events-none select-none" 
+              viewBox="0 0 100 200" 
+              preserveAspectRatio="none"
+            >
+              <path d="M 8 0 C 13 40, 4 90, 9 200" stroke="#735422" strokeWidth="0.35" fill="none" />
+              <path d="M 18 0 C 12 60, 22 130, 16 200" stroke="#735422" strokeWidth="0.35" fill="none" />
+              <path d="M 32 0 C 37 50, 28 110, 34 200" stroke="#735422" strokeWidth="0.35" fill="none" />
+              <path d="M 52 0 C 47 70, 56 120, 50 200" stroke="#735422" strokeWidth="0.35" fill="none" />
+              <path d="M 68 0 C 72 30, 66 110, 71 200" stroke="#735422" strokeWidth="0.35" fill="none" />
+              <path d="M 82 0 C 77 60, 86 140, 80 200" stroke="#735422" strokeWidth="0.35" fill="none" />
+              <path d="M 92 0 C 95 80, 89 150, 93 200" stroke="#735422" strokeWidth="0.35" fill="none" />
+            </svg>
+
+            {/* Subtle horizontal grain mesh */}
             <div 
-              className="absolute inset-0 pointer-events-none opacity-[0.02]"
+              className="absolute inset-0 pointer-events-none opacity-[0.015]"
               style={{
-                backgroundImage: "repeating-linear-gradient(90deg, #1A1918 1px, #1A1918 2px, transparent 2px, transparent 6px)"
+                backgroundImage: "repeating-linear-gradient(90deg, #1A1918 0px, #1A1918 1px, transparent 1px, transparent 4px)"
               }}
             />
 
-            {/* Classic Door Panels */}
+            {/* Premium Wood Panels with rounded details */}
             <div className="w-full flex-1 flex flex-col gap-4 relative z-10 pb-4 pointer-events-none">
               
               {/* Top Panel */}
-              <div className="w-full h-1/2 border border-[#DFD5CB] bg-[#F5EFEB] rounded-xs shadow-[inset_1px_1px_3px_rgba(0,0,0,0.06),1px_1px_1px_rgba(255,255,255,0.7)] relative">
-                <div className="absolute inset-1 border border-[#EAE3DC]/55 rounded-xs" />
+              <div className="w-full h-1/2 border border-[#DFD5CB] bg-[#F5EFEB]/50 rounded-sm shadow-[inset_1px_1px_4px_rgba(26,25,24,0.1),1px_1px_0_rgba(255,255,255,0.7)] relative">
+                <div className="absolute inset-1.5 border border-[#EAE3DC]/55 rounded-xs" />
               </div>
 
               {/* Bottom Panel */}
-              <div className="w-full h-1/2 border border-[#DFD5CB] bg-[#F5EFEB] rounded-xs shadow-[inset_1px_1px_3px_rgba(0,0,0,0.06),1px_1px_1px_rgba(255,255,255,0.7)] relative">
-                <div className="absolute inset-1 border border-[#EAE3DC]/55 rounded-xs" />
+              <div className="w-full h-1/2 border border-[#DFD5CB] bg-[#F5EFEB]/50 rounded-sm shadow-[inset_1px_1px_4px_rgba(26,25,24,0.1),1px_1px_0_rgba(255,255,255,0.7)] relative">
+                <div className="absolute inset-1.5 border border-[#EAE3DC]/55 rounded-xs" />
               </div>
             </div>
 
-            {/* Brass Door Handle */}
+            {/* Brass Door Handle with Specular specularity catching light */}
             <div 
-              className="absolute right-3 top-[55%] -translate-y-1/2 flex items-center gap-1 z-20 transition-transform duration-300"
+              className="absolute right-3.5 top-[55%] -translate-y-1/2 flex items-center gap-1 z-20 transition-transform duration-300"
               style={{
                 transform: handleWiggle ? "rotate(3deg) translateY(-1px)" : "none"
               }}
             >
               
-              {/* Lock plate */}
-              <div className="w-3.5 h-10 bg-gradient-to-b from-[#e3c485] via-[#a88145] to-[#7d5a22] rounded-xs border border-[#a88145]/40 shadow-[1px_1px_3px_rgba(0,0,0,0.2)] flex flex-col items-center justify-between py-1.5">
+              {/* Lock plate with light reflection */}
+              <div 
+                className="w-3.5 h-10 rounded-xs border shadow-[1px_1px_3px_rgba(0,0,0,0.18)] flex flex-col items-center justify-between py-1.5"
+                style={{
+                  background: `linear-gradient(${handleSpecularAngle}deg, #fceecb 0%, #d8b26e 40%, #a0783c 75%, #684818 100%)`,
+                  borderColor: "rgba(168, 129, 69, 0.4)"
+                }}
+              >
                 <div className="w-1 h-1 rounded-full bg-[#3d2e17] shadow-inner" />
                 <div className="w-[2px] h-2.5 bg-charcoal-900 rounded-full" />
               </div>
 
-              {/* Handle bar */}
+              {/* Handle bar w/ responsive rotation */}
               <div 
                 className="relative origin-[3px_3px] transition-transform duration-300"
                 style={{
-                  transform: isOpening ? "rotate(40deg)" : "rotate(0deg)",
+                  transform: isOpening ? "rotate(42deg)" : isHovering ? "rotate(6deg)" : "rotate(0deg)",
                   marginLeft: "-5px"
                 }}
               >
-                <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#e3c485] to-[#a88145] border border-[#a88145]/40 shadow-xs" />
-                <div className="absolute left-[2px] top-[0.5px] w-7 h-1.5 bg-gradient-to-r from-[#e3c485] via-[#a88145] to-[#7d5a22] rounded-r-full border-y border-r border-[#a88145]/40 shadow-[1px_1px_2px_rgba(0,0,0,0.15)]" />
+                {/* Joint */}
+                <div 
+                  className="w-1.5 h-1.5 rounded-full border shadow-xs" 
+                  style={{
+                    background: `linear-gradient(${handleSpecularAngle}deg, #fceecb, #a88145)`,
+                    borderColor: "rgba(168, 129, 69, 0.4)"
+                  }}
+                />
+                
+                {/* Horizontal Lever */}
+                <div 
+                  className="absolute left-[2px] top-[0.5px] w-7.5 h-1.5 rounded-r-full border shadow-[1px_1.5px_2px_rgba(0,0,0,0.12)]"
+                  style={{
+                    background: `linear-gradient(${handleSpecularAngle}deg, #fceecb 0%, #d8b26e 40%, #a0783c 75%, #684818 100%)`,
+                    borderColor: "rgba(168, 129, 69, 0.4)"
+                  }}
+                />
               </div>
             </div>
           </div>
