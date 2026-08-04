@@ -3,19 +3,23 @@
 class AudioEngine {
   private ctx: AudioContext | null = null;
   private droneNodes: { 
-    osc1: OscillatorNode; 
-    osc2: OscillatorNode; 
-    osc3: OscillatorNode; 
+    oscs: OscillatorNode[]; 
+    gains: GainNode[]; 
+    lfos: OscillatorNode[]; 
+    lfoGains: GainNode[]; 
+    filterLfo: OscillatorNode; 
+    filterLfoGain: GainNode; 
+    padFilter: BiquadFilterNode; 
     gain: GainNode; 
-    windSource: AudioBufferSourceNode; 
-    windFilter: BiquadFilterNode; 
-    windGain: GainNode; 
-    lfo: OscillatorNode;
   } | null = null;
   private rainNodes: { noise: AudioBufferSourceNode; filter: BiquadFilterNode; gain: GainNode } | null = null;
-  private fireNodes: { noise: ScriptProcessorNode; gain: GainNode; osc: OscillatorNode } | null = null;
+  private fireNodes: { noise: AudioBufferSourceNode; gain: GainNode } | null = null;
   private chimesInterval: NodeJS.Timeout | null = null;
   private birdsInterval: NodeJS.Timeout | null = null;
+  private rainDropletsInterval: NodeJS.Timeout | null = null;
+  private fireCracklesInterval: NodeJS.Timeout | null = null;
+  private activeMusicNodes: { osc: OscillatorNode; gain: GainNode }[] = [];
+  private musicInterval: NodeJS.Timeout | null = null;
 
   private initCtx() {
     if (typeof window === "undefined") return;
@@ -225,7 +229,7 @@ class AudioEngine {
 
       // Soft felt piano envelope
       gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.035, now + 0.05); // 50ms slow attack
+      gain.gain.linearRampToValueAtTime(0.06, now + 0.05); // 50ms slow attack
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.0); // smooth long decay
 
       osc1.start(now);
@@ -239,182 +243,149 @@ class AudioEngine {
   }
 
   // 5. Cozy room pad & LFO wind breeze & random bird chirps
+  // 5. Play beautiful, slow-evolving ambient chord progression in a higher register (no motor engine hum)
+  private playAmbientMusicChord(chordIndex: number) {
+    try {
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+
+      // Define 4 beautiful chords in C major / A pentatonic (pure, warm, relaxing)
+      const chords = [
+        [261.63, 329.63, 392.00, 493.88], // Cmaj7 (C4, E4, G4, B4)
+        [349.23, 440.00, 523.25, 659.25], // Fmaj7 (F4, A4, C5, E5)
+        [293.66, 349.23, 440.00, 587.33], // Dm7 (D4, F4, A4, D5)
+        [392.00, 493.88, 587.33, 783.99]  // G7 / G6 (G4, B4, D5, G5)
+      ];
+
+      const pitches = chords[chordIndex % chords.length];
+
+      pitches.forEach((freq) => {
+        const osc = this.ctx!.createOscillator();
+        const gainNode = this.ctx!.createGain();
+        const filter = this.ctx!.createBiquadFilter();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now);
+
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(600, now); // soft, warm filter
+
+        gainNode.gain.setValueAtTime(0, now);
+        const noteVolume = 0.035; 
+        gainNode.gain.linearRampToValueAtTime(noteVolume, now + 2.0); // 2-second slow attack
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 9.5); // long decay
+
+        osc.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.ctx!.destination);
+
+        osc.start(now);
+        osc.stop(now + 9.6);
+
+        const nodePair = { osc, gain: gainNode };
+        this.activeMusicNodes.push(nodePair);
+
+        // Cleanup node references after playing
+        setTimeout(() => {
+          this.activeMusicNodes = this.activeMusicNodes.filter((n) => n !== nodePair);
+        }, 10000);
+      });
+    } catch {}
+  }
+
   public startDrone() {
     try {
       this.initCtx();
-      if (!this.ctx || this.droneNodes) return;
-      const now = this.ctx.currentTime;
+      if (!this.ctx || this.musicInterval) return;
 
-      // Soft Pad Chord (C major add9 feeling: C3, G3, D4)
-      const osc1 = this.ctx.createOscillator();
-      const osc2 = this.ctx.createOscillator();
-      const osc3 = this.ctx.createOscillator();
-      const padGain = this.ctx.createGain();
-      const padFilter = this.ctx.createBiquadFilter();
+      let chordIndex = 0;
+      this.playAmbientMusicChord(chordIndex++);
 
-      osc1.type = "sine";
-      osc1.frequency.setValueAtTime(130.81, now); // C3
-      
-      osc2.type = "sine";
-      osc2.frequency.setValueAtTime(196.00, now); // G3
+      this.musicInterval = setInterval(() => {
+        this.playAmbientMusicChord(chordIndex++);
+      }, 8000);
 
-      osc3.type = "sine";
-      osc3.frequency.setValueAtTime(293.66, now); // D4
-
-      padFilter.type = "lowpass";
-      padFilter.frequency.setValueAtTime(220, now);
-
-      padGain.gain.setValueAtTime(0, now);
-      padGain.gain.linearRampToValueAtTime(0.02, now + 3.0); // very smooth fade-in
-
-      osc1.connect(padFilter);
-      osc2.connect(padFilter);
-      osc3.connect(padFilter);
-      padFilter.connect(padGain);
-      padGain.connect(this.ctx.destination);
-
-      osc1.start(now);
-      osc2.start(now);
-      osc3.start(now);
-
-      // Gentle wind breeze (LFO modulated bandpass white noise)
-      const bufferSize = this.ctx.sampleRate * 4.0;
-      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-
-      const windSource = this.ctx.createBufferSource();
-      windSource.buffer = buffer;
-      windSource.loop = true;
-
-      const windFilter = this.ctx.createBiquadFilter();
-      windFilter.type = "bandpass";
-      windFilter.Q.setValueAtTime(0.9, now);
-      windFilter.frequency.setValueAtTime(240, now);
-
-      // LFO Lull (Slow modulation of wind frequency)
-      const lfo = this.ctx.createOscillator();
-      lfo.type = "sine";
-      lfo.frequency.setValueAtTime(0.08, now); // slow cycle
-      const lfoGain = this.ctx.createGain();
-      lfoGain.gain.setValueAtTime(70, now); // range
-      
-      lfo.connect(lfoGain);
-      lfoGain.connect(windFilter.frequency);
-
-      const windGain = this.ctx.createGain();
-      windGain.gain.setValueAtTime(0, now);
-      windGain.gain.linearRampToValueAtTime(0.015, now + 3.0); // extremely quiet breeze
-
-      windSource.connect(windFilter);
-      windFilter.connect(windGain);
-      windGain.connect(this.ctx.destination);
-
-      lfo.start(now);
-      windSource.start(now);
-
-      this.droneNodes = { 
-        osc1, 
-        osc2, 
-        osc3, 
-        gain: padGain, 
-        windSource, 
-        windFilter, 
-        windGain, 
-        lfo 
-      };
-
-      // Periodic birds chirping in background (every 18-28 seconds)
-      this.startBirds();
+      // Start ambient wind chimes too
+      this.startAmbientChimes();
     } catch (e) {
-      console.warn("AudioEngine: Sunday drone start failed:", e);
+      console.warn("AudioEngine: Ambient music start failed:", e);
     }
   }
 
   public stopDrone() {
-    this.stopBirds();
-    if (this.droneNodes) {
+    this.stopAmbientChimes();
+    if (this.musicInterval) {
+      clearInterval(this.musicInterval);
+      this.musicInterval = null;
+    }
+    
+    // Quick fade out of all active playing music notes
+    const now = this.ctx ? this.ctx.currentTime : 0;
+    this.activeMusicNodes.forEach(({ osc, gain }) => {
       try {
-        const { osc1, osc2, osc3, gain, windSource, windGain, lfo } = this.droneNodes;
         if (this.ctx) {
-          const now = this.ctx.currentTime;
           gain.gain.cancelScheduledValues(now);
           gain.gain.setValueAtTime(gain.gain.value, now);
-          gain.gain.linearRampToValueAtTime(0, now + 2.0); // slow pad fade
-
-          windGain.gain.cancelScheduledValues(now);
-          windGain.gain.setValueAtTime(windGain.gain.value, now);
-          windGain.gain.linearRampToValueAtTime(0, now + 2.0); // slow wind fade
-
+          gain.gain.linearRampToValueAtTime(0, now + 1.0); // 1-second fade out
           setTimeout(() => {
             try {
-              osc1.stop();
-              osc2.stop();
-              osc3.stop();
-              windSource.stop();
-              lfo.stop();
+              osc.stop();
             } catch {}
-          }, 2200);
+          }, 1100);
         }
       } catch {}
-      this.droneNodes = null;
-    }
+    });
+    this.activeMusicNodes = [];
   }
 
-  // 6. Synthesize bird chirping (quick high-pitch sweeps, very gentle)
-  public playBirdChirp() {
+  // 6. Synthesize soft wind chimes in background (highly relaxing glass/metal tinkles)
+  public playAmbientChime() {
     try {
       this.initCtx();
       if (!this.ctx) return;
       const now = this.ctx.currentTime;
 
-      // 2-3 chirps sequence
-      const chirps = 2 + Math.floor(Math.random() * 2);
-      for (let i = 0; i < chirps; i++) {
-        const timeOffset = i * 0.12 + Math.random() * 0.02;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+      // Higher-octave pentatonic pitches (G5, A5, C6, D6, E6)
+      const scale = [783.99, 880.00, 1046.50, 1174.66, 1318.51];
+      const freq = scale[Math.floor(Math.random() * scale.length)];
 
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
 
-        osc.type = "sine";
-        const startFreq = 2900 + Math.random() * 200;
-        const peakFreq = startFreq + 500 + Math.random() * 100;
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now);
 
-        // Fast frequency sweep
-        osc.frequency.setValueAtTime(startFreq, now + timeOffset);
-        osc.frequency.exponentialRampToValueAtTime(peakFreq, now + timeOffset + 0.025);
-        osc.frequency.exponentialRampToValueAtTime(startFreq - 150, now + timeOffset + 0.06);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(900, now);
 
-        gain.gain.setValueAtTime(0, now + timeOffset);
-        // Very low volume, background birds
-        gain.gain.linearRampToValueAtTime(0.005, now + timeOffset + 0.015);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + timeOffset + 0.06);
+      gain.gain.setValueAtTime(0, now);
+      const volume = 0.006 + Math.random() * 0.002;
+      gain.gain.linearRampToValueAtTime(volume, now + 0.1); // Slow 100ms attack
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.0 + Math.random() * 1.5); // long decay
 
-        osc.start(now + timeOffset);
-        osc.stop(now + timeOffset + 0.07);
-      }
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 5.0);
     } catch (e) {
-      console.warn("AudioEngine: Bird chirp failed:", e);
+      console.warn("AudioEngine: Ambient chime play failed:", e);
     }
   }
 
-  private startBirds() {
-    this.stopBirds();
-    // Play a chirp occasionally
-    const playRandomBird = () => {
-      this.playBirdChirp();
-      const nextDelay = 18000 + Math.random() * 12000; // 18-30s
-      this.birdsInterval = setTimeout(playRandomBird, nextDelay);
+  private startAmbientChimes() {
+    this.stopAmbientChimes();
+    const playRandomChime = () => {
+      this.playAmbientChime();
+      const nextDelay = 15000 + Math.random() * 10000; // 15-25s
+      this.birdsInterval = setTimeout(playRandomChime, nextDelay);
     };
-    // First chirp delayed by 5-10s
-    this.birdsInterval = setTimeout(playRandomBird, 6000 + Math.random() * 4000);
+    this.birdsInterval = setTimeout(playRandomChime, 6000 + Math.random() * 4000);
   }
 
-  private stopBirds() {
+  private stopAmbientChimes() {
     if (this.birdsInterval) {
       clearTimeout(this.birdsInterval);
       this.birdsInterval = null;
@@ -444,6 +415,7 @@ class AudioEngine {
       if (!this.ctx || this.rainNodes) return;
       const now = this.ctx.currentTime;
 
+      // Cascaded warm rumble rain (heavily filtered white noise, no low hiss)
       const bufferSize = this.ctx.sampleRate * 2.0;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
@@ -456,13 +428,13 @@ class AudioEngine {
       noise.loop = true;
 
       const filter = this.ctx.createBiquadFilter();
-      filter.type = "bandpass";
-      filter.frequency.setValueAtTime(800, now);
-      filter.Q.setValueAtTime(0.6, now);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(320, now); // Raised cutoff to prevent motor hum
+      filter.Q.setValueAtTime(0.5, now);
 
       const gain = this.ctx.createGain();
       gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.04, now + 2.0);
+      gain.gain.linearRampToValueAtTime(0.025, now + 2.0); // Quiet wind/rain rustle
 
       noise.connect(filter);
       filter.connect(gain);
@@ -471,12 +443,56 @@ class AudioEngine {
       noise.start(now);
 
       this.rainNodes = { noise, filter, gain };
+
+      // Droplets scheduler
+      const playDroplet = () => {
+        try {
+          if (!this.ctx || !this.rainNodes) return;
+          const dropletNow = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const dropletGain = this.ctx.createGain();
+          const dropletFilter = this.ctx.createBiquadFilter();
+
+          osc.type = "sine";
+          const freq = 400 + Math.random() * 500;
+          osc.frequency.setValueAtTime(freq, dropletNow);
+
+          dropletFilter.type = "lowpass";
+          dropletFilter.frequency.setValueAtTime(800, dropletNow);
+
+          dropletGain.gain.setValueAtTime(0, dropletNow);
+          const maxGain = 0.002 + Math.random() * 0.003;
+          dropletGain.gain.linearRampToValueAtTime(maxGain, dropletNow + 0.002);
+          dropletGain.gain.exponentialRampToValueAtTime(0.0001, dropletNow + 0.02 + Math.random() * 0.03);
+
+          osc.connect(dropletFilter);
+          dropletFilter.connect(dropletGain);
+          dropletGain.connect(this.ctx.destination);
+
+          osc.start(dropletNow);
+          osc.stop(dropletNow + 0.1);
+        } catch {}
+      };
+
+      const scheduleNextDroplet = () => {
+        if (!this.rainNodes) return;
+        const delay = 50 + Math.random() * 200;
+        this.rainDropletsInterval = setTimeout(() => {
+          playDroplet();
+          scheduleNextDroplet();
+        }, delay);
+      };
+      scheduleNextDroplet();
     } catch (e) {
       console.warn("AudioEngine: Rain failed:", e);
     }
   }
 
   public stopRain() {
+    if (this.rainDropletsInterval) {
+      clearTimeout(this.rainDropletsInterval);
+      this.rainDropletsInterval = null;
+    }
     if (this.rainNodes) {
       try {
         const { noise, gain } = this.rainNodes;
@@ -502,47 +518,90 @@ class AudioEngine {
       if (!this.ctx || this.fireNodes) return;
       const now = this.ctx.currentTime;
 
-      // Cozy fireplace crackling rumble (very low frequency sine + random clicks)
-      const osc = this.ctx.createOscillator();
-      const oscGain = this.ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(48, now);
-      oscGain.gain.setValueAtTime(0.015, now);
-
       const gain = this.ctx.createGain();
       gain.gain.setValueAtTime(0, now);
       gain.gain.linearRampToValueAtTime(0.04, now + 1.5);
 
-      osc.connect(oscGain);
-      oscGain.connect(gain);
-      osc.start(now);
+      // Cozy atmospheric roar (low-passed white noise at 200Hz, very quiet, no low hum)
+      const bufferSize = this.ctx.sampleRate * 2.0;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const roarNoise = this.ctx.createBufferSource();
+      roarNoise.buffer = buffer;
+      roarNoise.loop = true;
 
-      const bufferSize = 4096;
-      const scriptNode = this.ctx.createScriptProcessor(bufferSize, 0, 1);
-      scriptNode.onaudioprocess = (e) => {
-        const outputBuffer = e.outputBuffer.getChannelData(0);
-        for (let i = 0; i < outputBuffer.length; i++) {
-          let sample = 0;
-          if (Math.random() < 0.0006) {
-            sample += (Math.random() > 0.5 ? 1 : -1) * 0.25;
-          }
-          outputBuffer[i] = sample;
-        }
-      };
+      const roarFilter = this.ctx.createBiquadFilter();
+      roarFilter.type = "lowpass";
+      roarFilter.frequency.setValueAtTime(200, now);
 
-      scriptNode.connect(gain);
+      const roarGain = this.ctx.createGain();
+      roarGain.gain.setValueAtTime(0, now);
+      roarGain.gain.linearRampToValueAtTime(0.008, now + 1.5); // extremely soft draft
+
+      roarNoise.connect(roarFilter);
+      roarFilter.connect(roarGain);
+      roarGain.connect(gain);
+      roarNoise.start(now);
+
       gain.connect(this.ctx.destination);
 
-      this.fireNodes = { noise: scriptNode, gain, osc };
+      this.fireNodes = { noise: roarNoise, gain };
+
+      // Wood crackles scheduler (warm triangle pops with low-pass filtering)
+      const playCrackle = () => {
+        try {
+          if (!this.ctx || !this.fireNodes) return;
+          const crackleNow = this.ctx.currentTime;
+          const crackleOsc = this.ctx.createOscillator();
+          const popGain = this.ctx.createGain();
+          const popFilter = this.ctx.createBiquadFilter();
+
+          crackleOsc.type = "triangle";
+          const freq = 120 + Math.random() * 160;
+          crackleOsc.frequency.setValueAtTime(freq, crackleNow);
+
+          popFilter.type = "lowpass";
+          popFilter.frequency.setValueAtTime(350, crackleNow);
+
+          popGain.gain.setValueAtTime(0, crackleNow);
+          const maxGain = 0.005 + Math.random() * 0.007;
+          popGain.gain.linearRampToValueAtTime(maxGain, crackleNow + 0.001);
+          popGain.gain.exponentialRampToValueAtTime(0.0001, crackleNow + 0.01 + Math.random() * 0.015);
+
+          crackleOsc.connect(popFilter);
+          popFilter.connect(popGain);
+          popGain.connect(this.ctx.destination);
+
+          crackleOsc.start(crackleNow);
+          crackleOsc.stop(crackleNow + 0.05);
+        } catch {}
+      };
+
+      const scheduleNextCrackle = () => {
+        if (!this.fireNodes) return;
+        const delay = 150 + Math.random() * 800;
+        this.fireCracklesInterval = setTimeout(() => {
+          playCrackle();
+          scheduleNextCrackle();
+        }, delay);
+      };
+      scheduleNextCrackle();
     } catch (e) {
       console.warn("AudioEngine: Fire failed:", e);
     }
   }
 
   public stopFire() {
+    if (this.fireCracklesInterval) {
+      clearTimeout(this.fireCracklesInterval);
+      this.fireCracklesInterval = null;
+    }
     if (this.fireNodes) {
       try {
-        const { noise, gain, osc } = this.fireNodes;
+        const { noise, gain } = this.fireNodes;
         if (this.ctx) {
           const now = this.ctx.currentTime;
           gain.gain.cancelScheduledValues(now);
@@ -550,8 +609,7 @@ class AudioEngine {
           gain.gain.linearRampToValueAtTime(0, now + 1.0);
           setTimeout(() => {
             try {
-              noise.disconnect();
-              osc.stop();
+              noise.stop();
             } catch {}
           }, 1100);
         }
