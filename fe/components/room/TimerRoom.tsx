@@ -47,12 +47,18 @@ export default function TimerRoom({
     if (isSubmitted) return;
     if (animationFrameRef.current !== null) {
       cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
-    setGameState("stopped");
-    startTimeRef.current = null;
     
-    // Calculate final time and submit immediately
-    const finalTime = Number(((performance.now() - (startTimeRef.current ?? performance.now())) / 1000).toFixed(2));
+    // Capture the exact elapsed milliseconds BEFORE nulling startTimeRef
+    const capturedStart = startTimeRef.current;
+    startTimeRef.current = null;
+    setGameState("stopped");
+
+    const finalTime = capturedStart != null
+      ? Number(((performance.now() - capturedStart) / 1000).toFixed(2))
+      : 0;
+
     setElapsedTime(finalTime);
     onSubmit(finalTime);
   };

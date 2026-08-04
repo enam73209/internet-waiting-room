@@ -37,9 +37,18 @@ export default function GuessRoom({
 
   return (
     <div className="w-full flex flex-col items-center justify-center select-none py-4 max-w-xl mx-auto">
-      <h3 className="font-serif text-lg text-charcoal-900 text-center mb-8 max-w-md leading-relaxed">
+      <h3 className="font-serif text-lg text-charcoal-900 text-center mb-6 max-w-md leading-relaxed">
         {room.question || room.subtitle || "Can you spot the difference?"}
       </h3>
+
+      {/* The image to guess */}
+      <div className="w-full max-w-xs aspect-square rounded-lg overflow-hidden border border-cream-300 shadow-xs mb-6 relative bg-cream-100 flex items-center justify-center select-none">
+        <img 
+          src="/images/room6-guess.png" 
+          alt="AI or Real?" 
+          className="w-full h-full object-cover"
+        />
+      </div>
 
       {/* Choice split cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full mb-8">

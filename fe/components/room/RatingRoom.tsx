@@ -34,9 +34,18 @@ export default function RatingRoom({
 
   return (
     <div className="w-full flex flex-col items-center justify-center select-none py-8 max-w-md mx-auto">
-      <h3 className="font-serif text-lg text-charcoal-900 text-center mb-10 leading-relaxed">
+      <h3 className="font-serif text-lg text-charcoal-900 text-center mb-6 leading-relaxed">
         {room.question || room.subtitle || "How would you rate this?"}
       </h3>
+
+      {/* Potato Image */}
+      <div className="w-36 h-36 rounded-full overflow-hidden border border-cream-300 shadow-xs mb-8 bg-cream-50 flex items-center justify-center relative select-none">
+        <img 
+          src="/images/happy-potato.png" 
+          alt="Today's Potato" 
+          className="w-full h-full object-cover"
+        />
+      </div>
 
       {/* star rating buttons row */}
       <div className="flex items-center gap-4">
