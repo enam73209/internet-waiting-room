@@ -3,7 +3,16 @@
 import { useSoundContext } from "@/components/audio/SoundProvider";
 
 export function useSound() {
-  const { isMuted, activeSounds, toggleMute, toggleSoundChannel, playChime, playDoorOpen } = useSoundContext();
+  const {
+    isMuted,
+    activeSounds,
+    toggleMute,
+    toggleSoundChannel,
+    playChime,
+    playDoorOpen,
+    playDoorHoverCreak,
+    playHandleClick,
+  } = useSoundContext();
   
   return {
     isMuted,
@@ -12,5 +21,7 @@ export function useSound() {
     toggleSoundChannel,
     playChime,
     playDoorOpen,
+    playDoorHoverCreak,
+    playHandleClick,
   };
 }

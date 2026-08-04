@@ -11,6 +11,8 @@ interface SoundContextType {
   toggleSoundChannel: (channel: string) => void;
   playChime: (pitch?: number) => void;
   playDoorOpen: () => void;
+  playDoorHoverCreak: () => void;
+  playHandleClick: () => void;
 }
 
 const SoundContext = createContext<SoundContextType | null>(null);
@@ -65,6 +67,18 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const playDoorHoverCreak = () => {
+    if (!isMuted && audioEngine) {
+      audioEngine.playDoorHoverCreak();
+    }
+  };
+
+  const playHandleClick = () => {
+    if (!isMuted && audioEngine) {
+      audioEngine.playHandleClick();
+    }
+  };
+
   return (
     <SoundContext.Provider
       value={{
@@ -74,6 +88,8 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
         toggleSoundChannel,
         playChime,
         playDoorOpen,
+        playDoorHoverCreak,
+        playHandleClick,
       }}
     >
       {children}

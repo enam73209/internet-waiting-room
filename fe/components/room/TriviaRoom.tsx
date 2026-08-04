@@ -17,34 +17,34 @@ interface TriviaRoomProps {
     };
   };
   onSubmit: (value: string) => void;
+  isSubmitted?: boolean;
+  selectedResponse?: string;
 }
 
-export default function TriviaRoom({ room, onSubmit }: TriviaRoomProps) {
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+export default function TriviaRoom({ 
+  room, 
+  onSubmit, 
+  isSubmitted = false, 
+  selectedResponse 
+}: TriviaRoomProps) {
   const [textGuess, setTextGuess] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
   const isTextMode = !room.options || room.options.length === 0;
+
+  const selectedOption = selectedResponse || (isTextMode ? textGuess : null);
+  const isCorrect = isTextMode
+    ? (selectedResponse || textGuess).trim().toLowerCase() === room.answer.toLowerCase()
+    : selectedOption === room.answer;
 
   const handleOptionSelect = (opt: string) => {
     if (isSubmitted) return;
-    setSelectedOption(opt);
-    setIsSubmitted(true);
+    onSubmit(opt);
   };
 
   const handleTextSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!textGuess.trim() || isSubmitted) return;
-    setIsSubmitted(true);
+    onSubmit(textGuess);
   };
-
-  const handleContinue = () => {
-    onSubmit(isTextMode ? textGuess : (selectedOption || ""));
-  };
-
-  const isCorrect = isTextMode
-    ? textGuess.trim().toLowerCase() === room.answer.toLowerCase()
-    : selectedOption === room.answer;
 
   return (
     <div className="w-full flex flex-col items-center justify-center select-none py-4 max-w-xl mx-auto">
@@ -53,12 +53,12 @@ export default function TriviaRoom({ room, onSubmit }: TriviaRoomProps) {
       </h3>
 
       {isTextMode ? (
-        /* Text Input Mode for custom silhouette / quiz guesses */
+        /* Text Input Mode */
         <form onSubmit={handleTextSubmit} className="w-full max-w-sm mb-8 flex flex-col gap-4">
           <input
             type="text"
             disabled={isSubmitted}
-            value={textGuess}
+            value={isSubmitted ? (selectedResponse || "") : textGuess}
             onChange={(e) => setTextGuess(e.target.value)}
             placeholder="Type your guess..."
             className="w-full bg-cream-50/50 border border-cream-300 rounded-lg px-4 py-3 font-sans text-sm text-charcoal-900 focus:outline-hidden focus:border-charcoal-900 text-center transition-all shadow-xs"
@@ -67,7 +67,7 @@ export default function TriviaRoom({ room, onSubmit }: TriviaRoomProps) {
             <button
               type="submit"
               disabled={!textGuess.trim()}
-              className="px-6 py-2.5 rounded-full border border-charcoal-900 bg-charcoal-900 hover:bg-charcoal-600 text-cream-50 font-serif text-xs uppercase tracking-widest transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 rounded-full border border-charcoal-900 bg-charcoal-900 hover:bg-charcoal-600 text-[#FDFDFB] font-serif text-xs uppercase tracking-widest transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               Verify Guess
             </button>
@@ -85,6 +85,7 @@ export default function TriviaRoom({ room, onSubmit }: TriviaRoomProps) {
             if (showColors) {
               if (isOptCorrect) cardBorder = "border-teal-500 bg-teal-50/20";
               else if (isClicked) cardBorder = "border-red-400 bg-red-50/10";
+              else cardBorder = "border-cream-200 opacity-30";
             } else {
               cardBorder = "border-cream-300 hover:border-charcoal-400 bg-cream-50/50 hover:bg-cream-50";
             }
@@ -94,7 +95,9 @@ export default function TriviaRoom({ room, onSubmit }: TriviaRoomProps) {
                 key={opt}
                 disabled={isSubmitted}
                 onClick={() => handleOptionSelect(opt)}
-                className={`w-full text-left p-4 rounded-lg border flex items-center justify-between transition-all duration-300 focus:outline-hidden cursor-pointer ${cardBorder}`}
+                className={`w-full text-left p-4 rounded-lg border flex items-center justify-between transition-all duration-300 focus:outline-hidden ${
+                  isSubmitted ? "cursor-default" : "cursor-pointer"
+                } ${cardBorder}`}
               >
                 <span className="font-serif text-sm text-charcoal-900 pr-6">
                   {opt}
@@ -112,14 +115,14 @@ export default function TriviaRoom({ room, onSubmit }: TriviaRoomProps) {
       )}
 
       {/* etymology reveal text */}
-      <div className="min-h-[120px] w-full flex flex-col items-center justify-center">
+      <div className="w-full flex flex-col items-center justify-center">
         <AnimatePresence>
           {isSubmitted && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="w-full bg-cream-200/40 border border-cream-300/80 p-5 rounded-lg flex flex-col gap-2 mb-6"
+              className="w-full bg-cream-200/40 border border-cream-300/80 p-5 rounded-lg flex flex-col gap-2"
             >
               <h4 className="font-serif text-xs text-charcoal-400 uppercase tracking-widest font-semibold">
                 {isCorrect ? "✨ Correct!" : `❌ Answer is ${room.answer}`}
@@ -130,20 +133,6 @@ export default function TriviaRoom({ room, onSubmit }: TriviaRoomProps) {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-
-      {/* continue button */}
-      <div className="h-14">
-        {isSubmitted && (
-          <motion.button
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={handleContinue}
-            className="px-8 py-3 rounded-full border border-charcoal-900 hover:bg-charcoal-900 hover:text-cream-50 font-serif text-sm tracking-wide transition-all duration-300 transform active:scale-98 cursor-pointer"
-          >
-            Continue to Stats
-          </motion.button>
-        )}
       </div>
     </div>
   );

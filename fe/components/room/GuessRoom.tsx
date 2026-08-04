@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface GuessRoomProps {
@@ -17,25 +17,23 @@ interface GuessRoomProps {
     };
   };
   onSubmit: (value: string) => void;
+  isSubmitted?: boolean;
+  selectedResponse?: string;
 }
 
-export default function GuessRoom({ room, onSubmit }: GuessRoomProps) {
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+export default function GuessRoom({ 
+  room, 
+  onSubmit, 
+  isSubmitted = false, 
+  selectedResponse 
+}: GuessRoomProps) {
+  const selectedOption = selectedResponse || null;
+  const isCorrect = selectedOption === room.answer;
 
   const handleSelect = (opt: string) => {
     if (isSubmitted) return;
-    setSelectedOption(opt);
-    setIsSubmitted(true);
+    onSubmit(opt);
   };
-
-  const handleContinue = () => {
-    if (selectedOption) {
-      onSubmit(selectedOption);
-    }
-  };
-
-  const isCorrect = selectedOption === room.answer;
 
   return (
     <div className="w-full flex flex-col items-center justify-center select-none py-4 max-w-xl mx-auto">
@@ -54,6 +52,7 @@ export default function GuessRoom({ room, onSubmit }: GuessRoomProps) {
           if (showColors) {
             if (isOptCorrect) cardBorder = "border-teal-500 bg-teal-50/20";
             else if (isClicked) cardBorder = "border-red-400 bg-red-50/10";
+            else cardBorder = "border-cream-200 opacity-30";
           } else {
             cardBorder = "border-cream-300 hover:border-charcoal-400 bg-cream-50/50 hover:bg-cream-50";
           }
@@ -63,7 +62,9 @@ export default function GuessRoom({ room, onSubmit }: GuessRoomProps) {
               key={opt}
               disabled={isSubmitted}
               onClick={() => handleSelect(opt)}
-              className={`p-6 rounded-lg border text-center flex flex-col items-center justify-center gap-4 transition-all duration-300 focus:outline-hidden cursor-pointer ${cardBorder}`}
+              className={`p-6 rounded-lg border text-center flex flex-col items-center justify-center gap-4 transition-all duration-300 focus:outline-hidden ${
+                isSubmitted ? "cursor-default" : "cursor-pointer"
+              } ${cardBorder}`}
             >
               {/* Outer check circle */}
               <div
@@ -83,14 +84,14 @@ export default function GuessRoom({ room, onSubmit }: GuessRoomProps) {
       </div>
 
       {/* result reveal text */}
-      <div className="min-h-[120px] w-full flex flex-col items-center justify-center">
+      <div className="w-full flex flex-col items-center justify-center">
         <AnimatePresence>
-          {isSubmitted && (
+          {isSubmitted && selectedOption && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="w-full bg-cream-200/40 border border-cream-300/80 p-5 rounded-lg flex flex-col gap-2 mb-6"
+              className="w-full bg-cream-200/40 border border-cream-300/80 p-5 rounded-lg flex flex-col gap-2"
             >
               <h4 className="font-serif text-xs text-charcoal-400 uppercase tracking-widest font-semibold">
                 {isCorrect ? "✨ Correct Guess!" : `❌ Incorrect Guess`}
@@ -101,20 +102,6 @@ export default function GuessRoom({ room, onSubmit }: GuessRoomProps) {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-
-      {/* continue button */}
-      <div className="h-14">
-        {isSubmitted && (
-          <motion.button
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={handleContinue}
-            className="px-8 py-3 rounded-full border border-charcoal-900 hover:bg-charcoal-900 hover:text-cream-50 font-serif text-sm tracking-wide transition-all duration-300 transform active:scale-98 cursor-pointer"
-          >
-            {room.buttonText || "Continue"}
-          </motion.button>
-        )}
       </div>
     </div>
   );
