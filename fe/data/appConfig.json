@@ -1,0 +1,46 @@
+{
+  "siteName": "The Internet Waiting Room",
+  "tagline": "Tiny moments. Shared by thousands.",
+  "description": "A collection of tiny interactive rooms designed for people who have one to five spare minutes.",
+
+  "dailyRoomLimit": 7,
+
+  "theme": {
+    "background": "#F8F7F4",
+    "card": "#FFFFFF",
+    "primaryText": "#1A1A1A",
+    "secondaryText": "#6D6D6D",
+    "accent": "#4F7FFF",
+    "success": "#27AE60",
+    "warning": "#FFB648"
+  },
+
+  "typography": {
+    "heading": "Playfair Display",
+    "body": "Inter",
+    "numbers": "IBM Plex Sans"
+  },
+
+  "animation": {
+    "doorDuration": 1000,
+    "pageFade": 450,
+    "counterDuration": 1800,
+    "chartDuration": 1200
+  },
+
+  "sound": {
+    "enabledByDefault": false,
+    "doorOpen": "/sounds/door-open.mp3",
+    "doorClose": "/sounds/door-close.mp3",
+    "buttonClick": "/sounds/button-click.mp3",
+    "reveal": "/sounds/reveal.mp3",
+    "success": "/sounds/success.mp3"
+  },
+
+  "buttons": {
+    "start": "🚪 Open Today's First Door",
+    "next": "🚪 Open Next Door",
+    "vault": "🗝️ Enter The Vault",
+    "finish": "Save & Exit"
+  }
+}

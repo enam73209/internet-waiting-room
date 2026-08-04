@@ -1,0 +1,209 @@
+[
+  {
+    "id": 1,
+    "type": "mood",
+    "title": "How does today feel?",
+    "subtitle": "Choose the emoji that best matches your day.",
+    "icon": "😊",
+    "accent": "#4F7FFF",
+    "illustrationId": "floating-clouds",
+    "buttonText": "Count Me",
+    "options": [
+      { "label": "Peaceful", "emoji": "😊" },
+      { "label": "Motivated", "emoji": "🔥" },
+      { "label": "Exhausted", "emoji": "😴" },
+      { "label": "Reflective", "emoji": "🌧️" }
+    ],
+    "result": {
+      "headline": "Today felt a little lighter.",
+      "story": "Most visitors described today as peaceful, while many others arrived full of motivation. Every mood added another brushstroke to today's emotional snapshot.",
+      "participants": 18492,
+      "stats": [
+        { "label": "Peaceful", "value": 41 },
+        { "label": "Motivated", "value": 27 },
+        { "label": "Exhausted", "value": 18 },
+        { "label": "Reflective", "value": 14 }
+      ],
+      "insight": "You shared today's feeling with over 7,500 people around the world."
+    }
+  },
+
+  {
+    "id": 2,
+    "type": "rating",
+    "title": "Rate Today's Potato",
+    "subtitle": "Be completely honest.",
+    "icon": "🥔",
+    "accent": "#FFB648",
+    "illustrationId": "happy-potato",
+    "buttonText": "Reveal",
+    "scale": 5,
+    "result": {
+      "headline": "This potato became today's unlikely celebrity.",
+      "story": "Thousands paused for a few seconds just to judge this magnificent potato. Somehow, it earned admiration across the globe.",
+      "participants": 22019,
+      "average": 4.7,
+      "insight": "Only 6% of visitors gave it fewer than three stars."
+    }
+  },
+
+  {
+    "id": 3,
+    "type": "action",
+    "title": "High-Five the Penguin",
+    "subtitle": "He's been waiting all day.",
+    "icon": "🐧",
+    "accent": "#55C7FF",
+    "illustrationId": "penguin",
+    "buttonText": "High Five!",
+    "result": {
+      "headline": "The penguin had a fantastic day.",
+      "story": "Tiny moments of kindness spread farther than expected. Thousands of visitors couldn't resist stopping for a quick high-five.",
+      "participants": 14883,
+      "insight": "You became High-Five #14,883 today."
+    }
+  },
+
+  {
+    "id": 4,
+    "type": "preference",
+    "title": "Your Morning Fuel",
+    "subtitle": "Tomorrow starts now. What do you reach for first?",
+    "icon": "☕",
+    "accent": "#C97B36",
+    "illustrationId": "coffee-tea",
+    "buttonText": "Let's See",
+    "options": ["Coffee", "Tea", "Water"],
+    "result": {
+      "headline": "The world leaned toward comfort today.",
+      "story": "Coffee quietly dominated the morning, while tea gathered a loyal following. A smaller group embraced the simplicity of water.",
+      "participants": 19284,
+      "stats": [
+        { "label": "Coffee", "value": 58 },
+        { "label": "Tea", "value": 31 },
+        { "label": "Water", "value": 11 }
+      ],
+      "insight": "Your choice matched more than half of today's visitors."
+    }
+  },
+
+  {
+    "id": 5,
+    "type": "timer",
+    "title": "Stop at Exactly 8 Seconds",
+    "subtitle": "No countdown. Trust your instincts.",
+    "icon": "⏱️",
+    "accent": "#00B894",
+    "illustrationId": "timer",
+    "buttonText": "Stop",
+    "target": 8,
+    "result": {
+      "headline": "Your internal clock was impressive.",
+      "story": "Most people stopped too early. A surprisingly small group came remarkably close to perfection.",
+      "participants": 16402,
+      "averageAccuracy": "7.83s",
+      "topPercent": 74,
+      "insight": "You performed better than nearly three out of four visitors."
+    }
+  },
+
+  {
+    "id": 6,
+    "type": "guess",
+    "title": "AI or Real?",
+    "subtitle": "Can you spot the difference?",
+    "icon": "🤖",
+    "accent": "#7C5CFF",
+    "illustrationId": "mystery-image",
+    "buttonText": "Reveal",
+    "options": ["AI Generated", "Real Photograph"],
+    "answer": "AI Generated",
+    "result": {
+      "headline": "Reality is getting harder to recognize.",
+      "story": "Many trusted their instincts, while others were fooled by convincing details. You're certainly not alone.",
+      "participants": 24381,
+      "correct": 67,
+      "insight": "One out of every three visitors guessed incorrectly."
+    }
+  },
+
+  {
+    "id": 7,
+    "type": "dilemma",
+    "title": "Which Ability Would You Keep Forever?",
+    "subtitle": "You can only choose one.",
+    "icon": "⚖️",
+    "accent": "#FF7675",
+    "illustrationId": "choice",
+    "buttonText": "Choose",
+    "options": ["Always Know The Weather", "Always Know The Exact Time"],
+    "result": {
+      "headline": "Certainty won over precision.",
+      "story": "People seemed to value preparing for tomorrow slightly more than knowing the exact moment they're living in.",
+      "participants": 17281,
+      "stats": [
+        { "label": "Weather", "value": 61 },
+        { "label": "Exact Time", "value": 39 }
+      ],
+      "insight": "Your choice aligned with the majority."
+    }
+  },
+
+  {
+    "id": 8,
+    "type": "sound",
+    "title": "Guess the Mystery Sound",
+    "subtitle": "Listen carefully before answering.",
+    "icon": "🎧",
+    "accent": "#00CEC9",
+    "illustrationId": "headphones",
+    "buttonText": "Play Sound",
+    "options": ["Rain", "Leaves", "Ocean", "Fire"],
+    "answer": "Leaves",
+    "result": {
+      "headline": "Nature can be surprisingly deceptive.",
+      "story": "Many visitors confidently picked rain, but dry leaves quietly fooled the crowd.",
+      "participants": 13184,
+      "correct": 22,
+      "insight": "Only about one in five visitors recognized the sound correctly."
+    }
+  },
+
+  {
+    "id": 9,
+    "type": "trivia",
+    "title": "Which Country Is This?",
+    "subtitle": "Recognize the silhouette.",
+    "icon": "🌍",
+    "accent": "#0984E3",
+    "illustrationId": "country-shape",
+    "buttonText": "Reveal",
+    "answer": "Japan",
+    "result": {
+      "headline": "Some places leave unforgettable shapes.",
+      "story": "Japan's outline was instantly familiar to most visitors, proving geography can spark powerful memories.",
+      "participants": 20843,
+      "correct": 83,
+      "fact": "Japan consists of over 14,000 islands.",
+      "insight": "You recognized a place millions dream of visiting."
+    }
+  },
+
+  {
+    "id": 10,
+    "type": "canvas",
+    "title": "Add One Color",
+    "subtitle": "Your single tap becomes part of today's artwork.",
+    "icon": "🎨",
+    "accent": "#A29BFE",
+    "illustrationId": "daily-canvas",
+    "buttonText": "Paint",
+    "palette": ["#FF6B6B", "#FFD93D", "#6BCB77", "#4D96FF", "#845EF7"],
+    "result": {
+      "headline": "Thousands created something together.",
+      "story": "Every visitor contributed only one color, yet together they formed a canvas no single person could have imagined.",
+      "participants": 19118,
+      "insight": "Your color became one tiny piece of today's shared artwork."
+    }
+  }
+]

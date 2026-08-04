@@ -1,0 +1,112 @@
+[
+  {
+    "id": "floating-clouds",
+    "title": "Today's Mood",
+    "style": "Modern Editorial Illustration",
+    "prompt": "A calm minimal editorial illustration of soft floating clouds with four subtle emotional expressions representing peaceful, motivated, exhausted and reflective. Premium flat illustration with soft gradients and elegant rounded shapes.",
+    "background": "#F7F8FC",
+    "primaryColor": "#4F7FFF",
+    "secondaryColor": "#EAF0FF",
+    "animation": "Clouds gently float up and down with a slow breathing motion.",
+    "assetType": "illustration"
+  },
+  {
+    "id": "happy-potato",
+    "title": "Today's Potato",
+    "style": "Cute Premium Character",
+    "prompt": "A surprisingly photogenic smiling potato with tiny eyes and a subtle smile. High quality 3D flat hybrid illustration. Funny but elegant, not childish.",
+    "background": "#FFF8EB",
+    "primaryColor": "#FFB648",
+    "secondaryColor": "#FFE8B6",
+    "animation": "Tiny bounce every few seconds with subtle eye blink.",
+    "assetType": "illustration"
+  },
+  {
+    "id": "penguin",
+    "title": "Friendly Penguin",
+    "style": "Premium Character Illustration",
+    "prompt": "A happy penguin standing with one flipper raised waiting for a high five. Clean minimal illustration inspired by modern productivity apps.",
+    "background": "#F3FBFF",
+    "primaryColor": "#55C7FF",
+    "secondaryColor": "#DDF6FF",
+    "animation": "Flipper waves slowly until clicked then performs a happy jump.",
+    "assetType": "illustration"
+  },
+  {
+    "id": "coffee-tea",
+    "title": "Morning Ritual",
+    "style": "Editorial Illustration",
+    "prompt": "A warm ceramic coffee mug beside an elegant tea cup on a wooden table with gentle morning sunlight. Premium minimal illustration.",
+    "background": "#FFF9F4",
+    "primaryColor": "#C97B36",
+    "secondaryColor": "#F8E6D4",
+    "animation": "Steam slowly rises from both cups.",
+    "assetType": "illustration"
+  },
+  {
+    "id": "timer",
+    "title": "Precision Timer",
+    "style": "Minimal Interface Illustration",
+    "prompt": "A beautiful circular analog timer with elegant moving second hand on a clean premium background.",
+    "background": "#F5FFF8",
+    "primaryColor": "#00B894",
+    "secondaryColor": "#DFF8EF",
+    "animation": "Needle rotates smoothly at 60 FPS.",
+    "assetType": "illustration"
+  },
+  {
+    "id": "mystery-image",
+    "title": "AI or Real",
+    "style": "Split Card",
+    "prompt": "A premium framed mystery image displayed like an art gallery exhibit. Slight lighting with elegant shadow. The image should be ambiguous enough to question whether it is AI generated or a real photograph.",
+    "background": "#F8F6FF",
+    "primaryColor": "#7C5CFF",
+    "secondaryColor": "#E8E1FF",
+    "animation": "Image slowly zooms by 2% creating curiosity.",
+    "assetType": "illustration"
+  },
+  {
+    "id": "choice",
+    "title": "Impossible Choice",
+    "style": "Conceptual Illustration",
+    "prompt": "Two elegant floating cards connected by a thin glowing line symbolizing a difficult decision. Modern editorial design with balanced composition.",
+    "background": "#FFF6F6",
+    "primaryColor": "#FF7675",
+    "secondaryColor": "#FFE2E2",
+    "animation": "Cards gently float in opposite directions.",
+    "assetType": "illustration"
+  },
+  {
+    "id": "headphones",
+    "title": "Mystery Sound",
+    "style": "Premium Audio Illustration",
+    "prompt": "Minimal premium wireless headphones floating over animated sound waves. Soft gradients and elegant lighting.",
+    "background": "#F4FFFF",
+    "primaryColor": "#00CEC9",
+    "secondaryColor": "#D9FFFF",
+    "animation": "Sound waves pulse continuously.",
+    "assetType": "illustration"
+  },
+  {
+    "id": "country-shape",
+    "title": "World Discovery",
+    "style": "Geographic Illustration",
+    "prompt": "A beautifully framed glowing silhouette of Japan displayed on a premium museum wall with subtle lighting.",
+    "background": "#F7FBFF",
+    "primaryColor": "#0984E3",
+    "secondaryColor": "#DCEEFF",
+    "animation": "Country silhouette slowly rotates a few degrees left and right.",
+    "assetType": "illustration"
+  },
+  {
+    "id": "daily-canvas",
+    "title": "Collective Canvas",
+    "style": "Abstract Digital Art",
+    "prompt": "A collaborative digital canvas made of thousands of colorful brush strokes and pixels blending into a beautiful abstract artwork. Premium artistic composition.",
+    "background": "#FAF8FF",
+    "primaryColor": "#A29BFE",
+    "secondaryColor": "#ECEAFF",
+    "animation": "Tiny colored dots slowly appear and merge into the artwork.",
+    "assetType": "illustration"
+  }
+]
